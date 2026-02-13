@@ -1,0 +1,257 @@
+✅ Final Prompt / Project Brief (Upgraded)
+
+Goal
+Build a React + TypeScript SPA that consumes an existing ASP.NET Web API backend for managing rooms, users, bookings, booking statuses, booking status history, and authentication. The UI must be fully responsive (mobile-first) using Tailwind CSS. Authentication is JWT-ready (attach Bearer token when backend JWT is enabled).
+
+🧰 Tech Stack & Setup
+
+React + Vite + TypeScript
+
+Tailwind CSS + PostCSS + Autoprefixer
+
+Axios for HTTP client
+
+React Router for routing
+
+TanStack React Query for data fetching & caching
+
+Zod (optional but recommended) for form validation
+
+react-hook-form (recommended) for form handling
+
+Env:
+
+VITE_API_BASE_URL (default: http://localhost:5145)
+
+📁 Folder Structure (src/)
+src/
+├── api/
+│   ├── client.ts                // axios instance (baseURL, interceptors)
+│   ├── types.ts                 // shared DTO types (match backend)
+│   └── endpoints/
+│       ├── auth.ts              // login, logout
+│       ├── rooms.ts             // CRUD
+│       ├── bookings.ts          // CRUD
+│       ├── bookingStatus.ts     // CRUD
+│       ├── bookingStatusHistory.ts // list/add
+│       └── users.ts             // CRUD
+├── hooks/
+│   ├── useAuth.ts               // login/logout, user state, token storage
+│   ├── useRooms.ts
+│   ├── useBookings.ts
+│   ├── useBookingStatus.ts
+│   ├── useUsers.ts
+│   └── useHistory.ts
+├── pages/
+│   ├── Login.tsx
+│   ├── Dashboard.tsx            // summary + quick links
+│   ├── Rooms/
+│   │   ├── List.tsx
+│   │   └── Form.tsx
+│   ├── Bookings/
+│   │   ├── List.tsx
+│   │   ├── Form.tsx
+│   │   └── Detail.tsx           // includes status history timeline
+│   ├── Users/
+│   │   ├── List.tsx
+│   │   └── Form.tsx
+│   └── Statuses/
+│       ├── List.tsx
+│       └── Form.tsx
+├── components/
+│   ├── layout/
+│   │   └── Shell.tsx            // sidebar + topbar (responsive)
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Select.tsx
+│   │   ├── Textarea.tsx
+│   │   ├── Card.tsx
+│   │   ├── Badge.tsx
+│   │   ├── Table.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Spinner.tsx
+│   │   └── Alert.tsx
+│   └── forms/
+│       ├── RoomForm.tsx
+│       ├── BookingForm.tsx
+│       ├── UserForm.tsx
+│       └── StatusForm.tsx
+├── routes/
+│   └── index.tsx                // React Router setup (protected routes)
+├── styles/
+│   └── globals.css              // Tailwind base/components/utilities
+├── utils/
+│   ├── format.ts                // date/time formatting
+│   └── validation.ts           // zod schemas
+├── App.tsx
+└── main.tsx
+
+🔗 API Mapping (Match Backend)
+
+Auth
+
+POST /api/auth/login
+
+POST /api/auth/logout
+
+Users
+
+GET /api/user
+
+POST /api/user
+
+PUT /api/user/{id}
+
+DELETE /api/user/{id}
+
+Rooms
+
+GET /api/room
+
+POST /api/room
+
+PUT /api/room/{id}
+
+DELETE /api/room/{id}
+
+Bookings
+
+GET /api/booking
+
+POST /api/booking
+
+PUT /api/booking/{id}
+
+DELETE /api/booking/{id}
+
+Booking Status
+
+GET /api/bookingstatus
+
+POST /api/bookingstatus
+
+PUT /api/bookingstatus/{id}
+
+DELETE /api/bookingstatus/{id}
+
+Booking Status History
+
+GET /api/bookingstatushistory
+
+GET /api/bookingstatushistory/booking/{bookingId}
+
+POST /api/bookingstatushistory
+
+🔐 Auth & JWT (Ready for Backend JWT)
+
+Requirements
+
+Store JWT token in localStorage (or memory if using refresh token later)
+
+Axios interceptor attaches:
+
+Authorization: Bearer <token>
+
+
+Protect routes using <ProtectedRoute />
+
+On 401 → auto logout
+
+⚙️ Key Implementation Notes
+
+Axios
+
+Base URL from VITE_API_BASE_URL
+
+JSON headers
+
+Interceptor for JWT Bearer token
+
+React Query
+
+useQuery for list/detail
+
+useMutation for create/update/delete
+
+invalidateQueries after mutation
+
+Forms
+
+Use react-hook-form + zodResolver
+
+Validate required fields, min length password, email format
+
+UI / UX
+
+Tailwind responsive layout (mobile-first)
+
+Sidebar collapses on mobile
+
+Reusable UI components
+
+Consistent spacing, cards, tables
+
+Routing
+
+/login public
+
+/dashboard, /rooms, /bookings, /users, /statuses protected
+
+Date Handling
+
+Send ISO strings to backend
+
+Format on UI using date-fns or custom util
+
+State UX
+
+Loading spinner
+
+Empty states
+
+Error alerts on API failure
+
+🧪 Example Axios Client (api/client.ts)
+import axios from "axios";
+
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5145",
+  headers: { "Content-Type": "application/json" },
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+📌 MVP Pages (Minimal Viable Product)
+
+✅ Login page (JWT)
+
+✅ Dashboard (summary: total rooms, bookings today, pending approvals)
+
+✅ Rooms CRUD
+
+✅ Bookings CRUD + Status History timeline
+
+✅ Users CRUD
+
+✅ Booking Status CRUD
+
+🚀 Optional Enhancements
+
+Dark mode (Tailwind class strategy)
+
+Role-based access (admin vs staff)
+
+Pagination & search
+
+Toast notifications
+
+Skeleton loaders
+
+Table sorting & filters
