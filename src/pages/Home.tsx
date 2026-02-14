@@ -1,9 +1,27 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { useAuth } from '../features/auth/AuthContext'
 
 export function HomePage() {
+  const { user, isAuthenticated, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (loading || !isAuthenticated) return
+    if (user?.role === 'admin' || user?.role === 'staff') {
+      navigate('/dashboard', { replace: true })
+      return
+    }
+    navigate('/rooms', { replace: true })
+  }, [isAuthenticated, loading, navigate, user])
+
+  if (!loading && isAuthenticated) {
+    return <div className="text-sm text-slate-300">Mengalihkan...</div>
+  }
+
   return (
     <div className="space-y-12">
       <section className="grid gap-10 lg:grid-cols-2 lg:items-center">

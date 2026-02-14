@@ -1,24 +1,74 @@
+import { useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { ResponsiveTable } from '../components/ui/ResponsiveTable'
 import { mockRooms } from '../features/rooms/data/mockRooms'
-import { mockBookings } from '../features/rooms/data/mockBookings'
 import { formatDate } from '../lib/utils'
+import { useAuth } from '../hooks/useAuth'
+import { useUsers } from '../hooks/useUsers'
+import { useRooms } from '../hooks/useRooms'
+import { useBookings } from '../hooks/useBookings'
 
-const stats = [
-  { label: 'Permintaan baru', value: 12, delta: '+18%' },
-  { label: 'Ruang tersedia', value: 14, delta: '+2 ruang' },
-  { label: 'Peminjaman aktif', value: 6, delta: 'Stable' },
-  { label: 'Ditolak hari ini', value: 1, delta: '-1' },
+const bookingStatusOptions = [
+  { id: 1, label: 'Waiting', badge: 'warning' as const },
+  { id: 2, label: 'Approved', badge: 'success' as const },
+  { id: 3, label: 'Rejected', badge: 'danger' as const },
+  { id: 4, label: 'Finish', badge: 'info' as const },
 ]
 
 export function DashboardPage() {
+  const { user, isAuthenticated, loading } = useAuth()
+  const { data: users = [], isLoading: isUsersLoading } = useUsers()
+  const { data: rooms = [], isLoading: isRoomsLoading } = useRooms()
+  const { data: bookings = [], isLoading: isBookingsLoading } = useBookings()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if(loading || !isAuthenticated) return
+    if (user?.role ==='user') {
+      navigate('/rooms',{replace:true})
+    }
+  }, [isAuthenticated, loading, navigate,user])
+
+  const stats = useMemo(() => {
+    const getStatusKey = (booking: { bookingStatusId?: number | string; status?: string; bookingStatus?: { name?: string }; bookingStatusName?: string }) => {
+      const id = Number(booking.bookingStatusId)
+      if (!Number.isNaN(id)) {
+        if (id === 2) return 'approved'
+        if (id === 3) return 'rejected'
+      }
+      const name = (booking.status || booking.bookingStatus?.name || (booking as any).bookingStatusName || '').toLowerCase()
+      return name
+    }
+
+    const approvedCount = bookings.filter((b) => getStatusKey(b) === 'approved').length
+    const rejectedCount = bookings.filter((b) => getStatusKey(b) === 'rejected').length
+
+    return [
+      { label: 'Jumlah user', value: users.length },
+      { label: 'Jumlah ruangan', value: rooms.length },
+      { label: 'Peminjaman disetujui', value: approvedCount },
+      { label: 'Peminjaman ditolak', value: rejectedCount },
+    ]
+  }, [bookings, rooms.length, users.length])
+
+  const isStatsLoading = isUsersLoading || isRoomsLoading || isBookingsLoading
+
+  const latestBookings = useMemo(() => {
+    const parseStart = (b: (typeof bookings)[number]) => {
+      if (b.startTime) return new Date(b.startTime).getTime()
+      if (b.date) return new Date(b.date).getTime()
+      return 0
+    }
+    return [...bookings].sort((a, b) => parseStart(b) - parseStart(a)).slice(0, 5)
+  }, [bookings])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <p className="text-sm uppercase tracking-wide text-primary-200">Dashboard</p>
         <h1 className="text-3xl font-semibold">Ringkasan operasional</h1>
-        <p className="text-sm text-slate-400">Data mock untuk demonstrasi UI dan layout.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -26,8 +76,8 @@ export function DashboardPage() {
           <Card key={item.label} className="shadow-soft">
             <p className="text-sm text-slate-400">{item.label}</p>
             <div className="mt-2 flex items-center justify-between">
-              <p className="text-3xl font-semibold text-white">{item.value}</p>
-              <Badge variant="success">{item.delta}</Badge>
+              <p className="text-3xl font-semibold text-white">{isStatsLoading ? '...' : item.value}</p>
+              <Badge variant={isStatsLoading ? 'neutral' : 'info'}>{isStatsLoading ? 'Memuat' : 'Terkini'}</Badge>
             </div>
           </Card>
         ))}
@@ -88,11 +138,12 @@ export function DashboardPage() {
 
       <Card title="Peminjaman terbaru" description="Top 5 permintaan" className="shadow-soft">
         <ResponsiveTable
-          data={mockBookings.slice(0, 4)}
+          data={latestBookings}
           getKey={(booking) => booking.id}
+          emptyState={isBookingsLoading ? 'Memuat data booking…' : 'Belum ada booking.'}
           columns={[
             { key: 'id', header: 'ID' },
-            { key: 'roomName', header: 'Ruang' },
+            { key: 'roomId', header: 'Ruang', render: (booking) => (booking as any).roomName || booking.roomId || '-' },
             {
               key: 'userName',
               header: 'Pemohon',
@@ -101,26 +152,36 @@ export function DashboardPage() {
             {
               key: 'date',
               header: 'Tanggal',
-              render: (booking) => `${formatDate(booking.date)} • ${booking.timeRange}`,
+              render: (booking) => {
+                const hasIso = booking.startTime && booking.endTime
+                const dateLabel = hasIso ? formatDate(booking.startTime!) : booking.date ? formatDate(booking.date) : '-'
+                const timeLabel = hasIso
+                  ? `${new Date(booking.startTime!).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.endTime!).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                  : booking.timeRange || ''
+                return timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel
+              },
             },
             {
               key: 'status',
               header: 'Status',
-              render: (booking) => (
-                <Badge
-                  variant={
-                    booking.status === 'approved'
-                      ? 'success'
-                      : booking.status === 'pending'
-                      ? 'warning'
-                      : booking.status === 'rejected'
-                      ? 'danger'
-                      : 'info'
-                  }
-                >
-                  {booking.status}
-                </Badge>
-              ),
+              render: (booking) => {
+                const option = bookingStatusOptions.find((opt) => opt.id === booking.bookingStatusId)
+                const fallback = (booking.status ?? '').toLowerCase()
+                const fallbackVariant =
+                  fallback === 'approved'
+                    ? 'success'
+                    : fallback === 'pending'
+                    ? 'warning'
+                    : fallback === 'rejected'
+                    ? 'danger'
+                    : 'info'
+
+                return (
+                  <Badge variant={option?.badge ?? fallbackVariant}>
+                    {option?.label ?? booking.status ?? 'Unknown'}
+                  </Badge>
+                )
+              },
             },
           ]}
         />

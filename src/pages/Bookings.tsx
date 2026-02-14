@@ -93,14 +93,23 @@ export function BookingsPage() {
   const showForm = canCreate
 
   const filtered = useMemo(() => {
-    const activeOnly = bookings.filter((booking) => {
-      const key = getStatusKey(booking);
-      return key !== 'finish' && key !== 'rejected';
-    });
+    const currentUserId = user?.id ? String(user.id) : ''
 
-    if (status == 'all') return activeOnly;
-    return activeOnly.filter((booking)=>getStatusKey(booking)===status);
-  },[bookings, status]);
+    const scoped = user?.role === 'user'
+      ? bookings.filter((booking) => {
+          const bookingUserId = booking.userId ? String(booking.userId) : ''
+          return bookingUserId && currentUserId ? bookingUserId === currentUserId : false
+        })
+      : bookings
+
+    const activeOnly = scoped.filter((booking) => {
+      const key = getStatusKey(booking)
+      return key !== 'finish' && key !== 'rejected'
+    })
+
+    if (status === 'all') return activeOnly
+    return activeOnly.filter((booking) => getStatusKey(booking) === status)
+  }, [bookings, status, user])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
