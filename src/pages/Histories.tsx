@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useHistory } from '../hooks/useHistory'
 import { Card } from '../components/ui/Card'
@@ -8,6 +8,8 @@ import { FormInput } from '../components/ui/FormInput'
 import { apiClient } from '../api/client'
 import type { BookingDto } from '../api/types'
 import { formatDate, formatDateTime } from '../utils/format'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 type BookingFilterKey = 'all' | 'finish' | 'rejected'
 
@@ -25,6 +27,17 @@ const bookingStatusOptions = [
 ]
 
 export function HistorysPage() {
+  const {user, isAuthenticated, loading}=useAuth()
+  const navigate = useNavigate()
+
+  useEffect(()=>{
+    if(loading||!isAuthenticated) return
+    if(user?.role ==='staff' || user?.role ==='user'){
+      navigate('/dashboard',{replace:true})
+      return
+    }
+  },[isAuthenticated,loading,navigate,user])
+
   const [bookingId, setBookingId] = useState('')
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<BookingFilterKey>('all')

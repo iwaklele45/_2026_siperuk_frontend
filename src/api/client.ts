@@ -30,6 +30,14 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('siperuk_auth')
+      const requestedPath = error.config?.url ?? ''
+      const isLoginRequest = requestedPath.includes('/auth/login')
+      const alreadyOnLoginPage = window.location.pathname === '/login'
+
+      if (!isLoginRequest && !alreadyOnLoginPage) {
+        // Force navigation so stale in-memory auth state is cleared immediately
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   },
