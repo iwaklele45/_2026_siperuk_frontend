@@ -7,6 +7,7 @@ import { ResponsiveTable } from '../components/ui/ResponsiveTable'
 import { useCreateUser, useDeleteUser, useUpdateUser, useUsers } from '../hooks/useUsers'
 import type { UserDto } from '../api/types'
 import { useAuth } from '../features/auth/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 type FormValues = {
   id?: string
@@ -17,13 +18,21 @@ type FormValues = {
 }
 
 export function UsersPage() {
-	const { user } = useAuth()
+	const {user, loading} = useAuth()
 	const { data, isLoading, error } = useUsers()
 	const visibleUsers =
 		data?.filter((u) => u.role !== 'admin' && !(user?.role === 'staff' && u.role === 'staff')) ?? []
 	const createUser = useCreateUser()
 	const updateUser = useUpdateUser()
 	const deleteUser = useDeleteUser()
+	const navigate = useNavigate()
+
+	useEffect(()=>{
+		if (user?.role === 'user'){
+			navigate('/rooms', {replace:true})
+			return
+		}
+	}, [loading, navigate, user])
 
 	const {
 		register,
