@@ -1,11 +1,10 @@
 # SIPERUK Frontend (Vite + React + TS)
 
-Frontend untuk sistem peminjaman ruangan SIPERUK. Menggunakan Vite + React + TypeScript, React Router v7, TanStack Query, TailwindCSS, dan axios. Mendukung autentikasi JWT dengan interceptor otomatis dan penanganan konflik booking.
+Frontend untuk sistem peminjaman ruangan SIPERUK. Menggunakan Vite + React + TypeScript, React Router v7, TanStack Query, TailwindCSS, dan axios. Mendukung autentikasi JWT dengan interceptor otomatis.
 
 ## Fitur utama
 - Login dan proteksi rute berbasis role (`admin`, `staff`, `user`).
 - CRUD booking ruang.
-- Highlight duplikasi booking (slot waktu/ruang sama) di tabel.
 - Manajemen status booking (approve/reject/finish) untuk admin/staff.
 - Data ruangan dan status booking dengan caching TanStack Query.
 
@@ -61,7 +60,6 @@ npm run format
   - Request shape: `{ roomId: number; userId?: number; startTime: string; endTime: string; purpose: string; bookingStatusId?: number }` (ISO time string).
   - Validasi klien: `endTime` harus lebih besar dari `startTime`.
   - Respons 409 dari `/api/Booking`/`/api/Booking/{id}`: ditampilkan sebagai error pada input waktu, dialog tidak ditutup; jika data tersedia, UI menyarankan slot terdekat.
-  - Duplikasi slot (ruang+tanggal+jam sama) akan menandai baris tabel kedua dan seterusnya dengan highlight merah.
 
 ## Catatan styling
 - TailwindCSS dengan theme di `src/styles/tailwind.css` dan global di `src/styles/globals.css`.
