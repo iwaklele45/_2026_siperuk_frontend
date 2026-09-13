@@ -18,12 +18,12 @@ Frontend untuk sistem peminjaman ruangan SIPERUK. Menggunakan Vite + React + Typ
 npm install
 ```
 
-2) Buat file `.env.local` (atau `.env`) minimal berisi
+2) Buat file `.env.local` (atau pastikan `.env`) berisi
 ```bash
-VITE_API_BASE_URL=http://localhost:5145
+VITE_API_BASE_URL=http://localhost:5234
 ```
 
-3) Jalankan dev server
+3) Jalankan dev server (aplikasi dapat diakses di `http://localhost:5173`)
 ```bash
 npm run dev
 ```
